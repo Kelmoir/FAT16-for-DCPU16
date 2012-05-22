@@ -1,0 +1,102 @@
+			Specification for an FAT16-like file system on the DCPU16
+
+
+
+General:
+	This document aims to be the specification for the FAT16 file system for the DCPU-16
+	The file system is inspired by the FAT systems from other parallel universes. 
+	It is divided into sectors consisting of usually 512 words. But this can be adaped, 
+	if necessary. Though it can happen being not supported.
+	All multi-word notations are little endian.
+	The file system is case-sensitive.
+
+Memory layout:
+	+-------------------------+
+	|Boot sector              |
+	|reserved sector 2        |
+	|...                      |
+	|reserved sector n        |
+	|FAT sector 1             |
+	|...                      |
+	|FAT sector n             |
+	|1st Root directory sector|
+	|free usable sectors      |
+	|...                      |
+	|last usable sector       |
+	+-------------------------+
+
+Boot sector:
+	The boot sector contains the necessary data to identify the media and contains the boot loader code
+	+------+----+--------------------------------------------------------------+
+	|Offset|size|contains/purpose                                              |
+	+------+----+--------------------------------------------------------------+
+	|0x0   |1   |Magic Number/Jump to boot loader Code                         |
+	|      |    |Boot able disk: 0b1100 1011 1000 0010 (0xCB82 - Add pc, 0x11  |
+	|      |    |Non-boot able Disk: 0                                         |
+	|0x1   |5   |Media Name, 7Bits per character, 11 characters in total       |
+	|0x6   |1   |words per sector.          512 is standart                    |
+	|0x7   |1   |sectors per cluster.         1 is standart                    |
+	|0x8   |1   |Number of reserves sectors including boot sector. At least 1. |
+	|0x9   |1   |Number of FAT tables.        1 is standart                    |
+	|0xA   |2   |Total number of sectors      i.e. 1440 for HMU1440            |
+	|0xC   |1   |Number of sectors per FAT    i.e. 3 for HMU1440               |
+	|0xD   |1   |Number of Sides of media     i.e. 2 for HMU1440               |
+	|0xE   |1   |Number of tracks per side    i.e. 40 for HMU1440              |
+	|0xF   |1   |Number of sectors per track  i.e. 18 for HMU1440              |
+	|0x10  |2   |Serial Number of media, generated on formatting               |
+	|0x12  |494 |Boot loader code                                              |
+	+------+----+--------------------------------------------------------------+
+
+Reserved sectors:
+	On boot-able media they contain the core code for the OS/CS/whatever.
+
+FAT Tables:
+	The FAT itself describes the entrys for the specified sectors. 16 bit per sector, with no spacing.
+	The 1st Root directory sector is number 0.
+	The boot sector, the reserved sector and the fat sectors are not counted for the FAT. 
+	FAT values:
+	+---------------+------------------------------+
+	|Value          |purpose                       |
+	+---------------+------------------------------+
+	|0x0000         |free cluster                  |
+	|0x0001 - 0xFFFD|next cluster of current entry |
+	|0xFFFE         |fault cluster                 |
+	|0xFFFF         |last cluster of current entry |
+	+---------------+------------------------------+
+
+	Example: The Root directory contains cluster 0, 2 and ends with cluster 3, cluster 1 is empty
+		Word No.    0      1      2      3
+		FAT:     0x0002 0x0000 0x0003 0xFFFF ... 
+
+Root directory:
+	The root directory always starts at cluster 0.
+	It is an standard directory.
+
+Directory Entry:
+	Directory entrys defines, which files they do contain, including additional information
+	Each entry is 16 words in size, thus 32 entrys are fitting into 1 512-word cluster
+	The starting date for time measurement can be adapted until the final release of this document.
+	+------+----+-----------------------------------------------------------------+
+	|Offset|size|contains/purpose                                                 |
+	+------+----+-----------------------------------------------------------------+
+	|0x0   |5   |File Name, 7Bits per character, 11 characters in total           |
+	|0x5   |1   |Flags, Active Flags have their coresponding bits set             |
+	|      |    |Bit 0: read only                                                 |
+	|      |    |Bit 1: hidden                                                    |
+	|      |    |Bit 2: system file                                               |
+	|      |    |Bit 3: reserved                                                  |
+	|      |    |Bit 4: subdirectory                                              |
+	|      |    |Bit 5: archive                                                   |
+	|      |    |Bit 6: executable                                                |
+	|      |    |Bit 7-15: reserved                                               |
+	|0x6   |3   |DateTime of file creation, multiplies of 100ms from 1.1.2012     |
+	|0x9   |3   |DateTime of file modification, multiplies of 100ms from 1.1.2012 |
+	|0xC   |1   |start cluster of File                                            |
+	|0xD   |2   |file size in words                                               |
+	|0xF   |1   |reserved                                                         |
+	+------+----+-----------------------------------------------------------------+
+
+
+
+
+
