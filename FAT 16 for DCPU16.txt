@@ -1,9 +1,9 @@
-			Specification for an FAT16-like file system on the DCPU16
+			RFC for an FAT16-like file system on the DCPU16
 
 
 
 General:
-	This document aims to be the specification for the FAT16 file system for the DCPU-16
+	This document aims to be the rfc for the FAT16 file system for the DCPU-16
 	The file system is inspired by the FAT systems from other parallel universes. 
 	It is divided into sectors consisting of usually 512 words. But this can be adaped, 
 	if necessary. Though it can happen being not supported.
